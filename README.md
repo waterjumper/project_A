@@ -47,7 +47,7 @@ PBI List:
 - PBI29：客户设置菜品的数量
 - PBI30：客户删除点错的菜品
 
-  #Sun Ziming:
+# Sun Ziming:
 - PBI31: 用户选择食品大小功能
 - PBI32：用户定制食品配料功能
 - PBI33：食品定制实时价格更新功能
