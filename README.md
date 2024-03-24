@@ -5,7 +5,7 @@ BY SUN:
 
 
 Lu Yixuan: 
-#PBI1: 查看实时配送状态
+#PBI1: 查看实时订单状态
 #PBI2: 接收订单
 #PBI3: 验证订单
 #PBI4: 分配订单
