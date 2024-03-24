@@ -1,7 +1,7 @@
-# project_A
+![image](https://github.com/waterjumper/project_A/assets/145550992/8cd35e4e-73e5-4cc4-a369-d2a6866284e4)# project_A
 PBI List:
 
-BY SUN:
+
 
 
 # Lu Yixuan: 
@@ -46,3 +46,13 @@ BY SUN:
 - PBI28：客户选择不同类型的菜品（蔬菜，荤菜等不同分类的切换）
 - PBI29：客户设置菜品的数量
 - PBI30：客户删除点错的菜品
+
+  #Sun Ziming:
+- PBI31: 用户选择食品大小功能
+- PBI32：用户定制食品配料功能
+- PBI33：食品定制实时价格更新功能
+- PBI34：用户保存定制食品功能
+- PBI35：用户将定制食品加入购物车并下单功能
+
+
+
