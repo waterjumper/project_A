@@ -5,11 +5,11 @@ BY SUN:
 
 
 Lu Yixuan: 
-#PBI1: 查看实时订单状态
-#PBI2: 接收订单
-#PBI3: 验证订单
-#PBI4: 取消订单
-#PBI5: 填写配送反馈
+#PBI1: 查看订单状态
+#PBI2: 刷新订单状态
+#PBI3: 取消订单
+#PBI4: 填写配送员评价
+#PBI5: 接收订单
 
 
 Lin Yuhui:
