@@ -8,8 +8,8 @@ PBI List:
 - PBI1: 查看订单状态
 - PBI2: 刷新订单状态
 - PBI3: 取消订单
-- PBI4: 填写配送员评价
-- PBI5: 接收订单
+- PBI4: 修改订单
+- PBI5: 填写配送员评价
 
 
 # Lin Yuhui:
