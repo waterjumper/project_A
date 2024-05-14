@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" th:href="@{/layui/css/layui.css}" media="all" />
+    <link rel="stylesheet" th:href="@{/css/custom.form.css}">
+    <style>
+        .custom-tree-item-clicked {
+            color: #FC9003
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="layui-fluid">
+        <div class="layui-row layui-col-space15">
+            <!-- 查询表单 -->
+            <div class="layui-col-sm12 layui-col-lg10">
+                <div class="user_table_div">
+                    <div id="searchParam" shiro:hasPermission="sys:user:list">
+                        <div class="layui-form-item">
+                            <div class="layui-input-inline">
+                                <input type="text" id="code" name="code" class="layui-input" autocomplete="off"
+                                    placeholder="Please enter the order number">
+                            </div>
+                            <div class="layui-input-inline ">
+                                <button class="layui-btn" onclick="search()" id="search">Search</button>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <table class="layui-hide" id="user_table" lay-filter="user_table"></table>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+</body>
+<script type="text/html" id="toolbar">
+    <div class="layui-btn-container">
+    </div>
+</script>
+<script type="text/html" id="tool">
+</script>
+<script th:inline="javascript" type="text/javascript">
+    var ctx = '[[@{/}]]'.replaceAll("\"", "").replace('//', '/');
+</script>
+<script th:src="@{/layui/layui.all.js}"></script>
+<script th:src="@{/js/core.util.js}"></script>
+<script>
+    function orderStatus(status) {
+        switch (status) {
+            case 0:
+                return 'To be paid'
+            case 1:
+                return 'paid'
+            case 2:
+                return 'shipment has been dispatched'
+            case 3:
+                return 'done'
+            case 4:
+                return 'cancelled'
+            default:
+                return 'unknown state'
+        }
+    }
+
+    function timestampToDate(Timestamp) {
+        let now = new Date(Timestamp),
+            y = now.getFullYear(),
+            m = now.getMonth() + 1,
+            d = now.getDate();
+
+        return y + "-" + (m < 10 ? "0" + m : m) + "-" + (d < 10 ? "0" + d : d) + " " + now.toTimeString().substr(0, 8);
+    }
+
+
+    function generateRandomString(length) {
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        let result = '';
+
+        for (let i = 0; i < length; i++) {
+            result += characters.charAt(Math.floor(Math.random() * characters.length));
+        }
+
+        return result;
+    }
+
+    function isEmpty(obj) {
+        return obj === undefined || obj === null || obj.trim() === ""
+    }
+
+    //获取token
+    var token = CoreUtil.getData("access_token");
+    //地址栏转义token中的#号
+    var tokenQuery = token.replace("#", "%23");
+    var tableIns1;
+    var table = layui.table;
+    var form = layui.form;
+    var layer = layui.layer;
+    var $ = jQuery = layui.jquery;
+    var laydate = layui.laydate;
+    var tree = layui.tree;
+    var transfer = layui.transfer;
+    var deptNo = null;
+    var startTime = null;
+    var endTime = null;
+    var upload = layui.upload;
+    var element = layui.element;
+    var util = layui.util;
+
+    var echo_progress = $("#echo_progress")
+    var cook_code = $("#cook_code")
+    // var gen_code = $("#gen_code")
+    var hidden_code = $("#hidden_code")
+    var cook_url = $("#cook_url")
+
+
+
+    layui.use(['table', 'layer', 'laydate', 'tree', 'transfer', 'upload', 'element', 'util'], function () {
+
+        // 文件上传
+        var lay_op = null;
+
+        var uploadInst = upload.render({
+            elem: '#upload' //绑定元素
+
+            // 限制文件大小，单位 KB
+            , size: 5 * 1024
+            , images: 'images'
+            , url: ctx + 'sysFiles/upload?authorization=' + tokenQuery //上传接口
+            , before: function (obj) {
+                // echo_progress.show();
+
+                // 预读本地文件示例
+                obj.preview(function (index, file, result) {
+                    $('#ID-upload-demo-img').attr('src', result);
+                });
+
+                // 进度条复位
+                element.progress('demo-filter-progress', '0%');
+
+                lay_op = layer.open({
+                    type: 1,
+                    area: ['420px', '20px'], // 宽高
+                    title: false, // 不显示标题栏
+                    closeBtn: 0,
+                    shadeClose: false, // 点击遮罩关闭层
+                    content: '<div style="padding: 16px;">图片上传中...</div>'
+                });
+
+                // 上传 loading
+                // layer.load();
+            }
+            , progress: function (n, elem, res, index) {
+                console.log('progress n=', n);
+
+                var percent = n + '%' // 获取进度百分比
+                element.progress('demo-filter-progress', percent); // layui 进度条元素使用
+            }
+            , done: function (res, size, upload) { // 上传完毕回调
+                // console.log('file down res=', res)
+
+                // console.log('file down size=', size, "\t upload=", upload)
+                // echo_progress.hide()
+                layer.close(lay_op)
+
+                let { data } = res;
+                if (data && data['path']) {
+                    cook_url.val(data['path'])
+                    layer.msg('文件上传成功', { icon: 1, time: 1000 });
+                }
+            }
+            , error: function (index, upload) {
+                //请求异常回调
+                // console.error('file error index=', index, "\t upload=", upload)
+
+                // echo_progress.hide()
+                layer.close(lay_op)
+                layer.msg('文件上传失败', { icon: 2, time: 1000 });
+            }
+        });
+
+        // 加载table
+        tableIns1 = table.render({
+            elem: '#user_table'
+            , contentType: 'application/json'
+            , headers: { "authorization": token }
+            , page: true //开启分页
+            , url: ctx + 'sys/order/pageList' //数据接口
+            , method: 'POST'
+            , parseData: function (res) { //将原始数据解析成 table 组件所规定的数据
+                return {
+                    "code": res.code, //解析接口状态
+                    "msg": res.msg, //解析提示文本
+                    "count": CoreUtil.isEmpty(res.data) ? 0 : res.data.total, //解析数据长度
+                    "data": CoreUtil.isEmpty(res.data) ? null : res.data.records //解析数据列表
+                }
+            }
+            , cols: [
+                [
+                    // { type: 'checkbox', fixed: 'left' },
+                    { field: 'code', title: 'Order ID'},
+                    { field: 'userId', title: 'User ID',},
+                    { field: 'totalAmount', title: 'Total price'},
+                    { field: 'orderStatus', title: 'Order status', templet: function (item) {
+                            return orderStatus(item.orderStatus)
+                        }
+                    },
+                    {
+                        field: 'ctime', title: 'Creation time', templet: function (item) {
+                            time = item.ctime
+                            if (!time) {
+                                time = Date.now()
+                            } else {
+                                time = Number(time)
+                            }
+
+                            return timestampToDate(time)
+                        }
+                    },
+                    {
+                        field: 'utime', title: 'Update time', templet: function (item) {
+                            time = item.utime
+                            if (!time) {
+                                time = Date.now()
+                            } else {
+                                time = Number(time)
+                            }
+
+                            return timestampToDate(time)
+                        }
+                    },
+                    // { width: 300, toolbar: "#tool", title: '操作' }
+                ]
+            ]
+            , toolbar: '#toolbar'
+        });
+    });
+
+    // 执行查询
+    function search() {
+        tableIns1.reload({
+            where: { //设定异步数据接口的额外参数，任意设
+                code:  $("#code").val(),
+            }
+            , page: {
+                curr: 1 //重新从第 1 页开始
+            }
+        });
+    };
+</script>
+
+</html>

@@ -1,0 +1,514 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script src="https://cdn.staticfile.org/html5shiv/r29/html5.min.js"></script>
+    <script src="https://cdn.staticfile.org/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <link href="https://cdn.bootcdn.net/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.bootcdn.net/ajax/libs/axios/1.5.0/axios.min.js"></script>
+    <!-- <script src="https://cdn.bootcdn.net/ajax/libs/alpinejs/2.8.0/alpine-ie11.min.js"></script> -->
+    <script defer src="https://cdn.bootcdn.net/ajax/libs/alpinejs/3.5.0/cdn.min.js"></script>
+    <link href="https://cdn.bootcdn.net/ajax/libs/toastify-js/1.12.0/toastify.min.css" rel="stylesheet"/>
+    <script src="https://cdn.bootcdn.net/ajax/libs/toastify-js/1.12.0/toastify.min.js"></script>
+
+    <!-- <link href="https://cdn.bootcdn.net/ajax/libs/flowbite/1.4.3/f别住lowbite.min.css" rel="stylesheet">
+    <script src="https://cdn.bootcdn.net/ajax/libs/flowbite/1.4.3/flowbite.min.js"></script> -->
+
+    <!-- <script th:src="@{/js/cook2.js}"></script> -->
+    <script th:src="@{/js/cook.js}"></script>
+    <link th:href="@{/css/materialdesignicons.min.css}" rel="stylesheet"/>
+    <style>
+        @layer utilities {
+
+            input[type="number"]::-webkit-inner-spin-button,
+            input[type="number"]::-webkit-outer-spin-button {
+                -webkit-appearance: none;
+                margin: 0;
+            }
+        }
+    </style>
+    <title>Cook Cart</title>
+</head>
+
+
+<body class="bg-gray-100">
+
+<!-- Header Navbar -->
+<nav class="fixed top-0 left-0 z-20 w-full border-b border-gray-200 bg-white py-2.5 px-6 sm:px-4">
+    <div class="container mx-auto flex max-w-6xl flex-wrap items-center justify-between">
+        <a href="/cook" class="flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                 stroke="currentColor" class="mr-3 h-6 text-blue-500 sm:h-9">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9"/>
+            </svg>
+
+            <span class="self-center whitespace-nowrap text-xl font-semibold">Cook</span>
+        </a>
+
+        <div class="mt-2 sm:mt-0 sm:flex md:order-2" x-data="homeData()">
+            <template x-if="!isLogin">
+                <div>
+                    <a type="button" href="/cook/login"
+                       class="rounde mr-3 hidden border border-blue-700 py-1.5 px-6 text-center text-sm font-medium text-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 md:inline-block rounded-lg">
+                        Login
+                    </a>
+                    <a type="button" href="/cook/register"
+                       class="rounde mr-3 hidden bg-blue-500 py-1.5 px-6 text-center text-sm font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 md:mr-0 md:inline-block rounded-lg">
+                        Register
+                    </a>
+                </div>
+            </template>
+
+
+            <template x-if="isLogin">
+                <!-- <button type="button"
+                    class="rounde mr-3 hidden bg-blue-700 py-1.5 px-6 text-center text-sm font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 md:mr-0 md:inline-block rounded-lg">退出</button> -->
+
+                <ul class="flex w-full flex-wrap items-center h-10">
+                    <li class="block relative" x-data="{showChildren:false}" @click.away="showChildren=false">
+                        <a href="#" class="flex items-center h-10 leading-10 px-4 rounded cursor-pointer no-underline hover:no-underline transition-colors duration-100 mx-1
+                                bg-blue-500 text-white" @click.prevent="showChildren=!showChildren">
+                            <span class="mr-3 text-xl"><i class="mdi mdi-account"></i></span>
+                            <span x-text="username"></span>
+                            <span class="ml-2"> <i class="mdi mdi-chevron-down"></i> </span>
+                        </a>
+
+                        <div class="bg-white shadow-md rounded border border-gray-300 text-sm absolute top-auto left-0 min-w-full w-56 z-30 mt-1"
+                             x-show="showChildren" style="display: none;"
+                             x-transition:enter="transition ease duration-300 transform"
+                             x-transition:enter-start="opacity-0 translate-y-2"
+                             x-transition:enter-end="opacity-100 translate-y-0"
+                             x-transition:leave="transition ease duration-300 transform"
+                             x-transition:leave-start="opacity-100 translate-y-0"
+                             x-transition:leave-end="opacity-0 translate-y-4">
+                                <span
+                                        class="absolute top-0 left-0 w-3 h-3 bg-white border transform rotate-45 -mt-1 ml-6"></span>
+                            <div class="bg-white rounded w-full relative z-10 py-1">
+                                <ul class="list-reset">
+                                    <li class="relative" x-data="{showChildren:false}"
+                                        @mouseleave="showChildren=false" @mouseenter="showChildren=true">
+                                        <a href="/cook/profile"
+                                           class="px-4 flex w-full items-start hover:bg-gray-100 no-underline hover:no-underline transition-colors duration-100 cursor-pointer">
+                                            <span class="flex-1">User Information</span>
+                                        </a>
+                                    </li>
+                                    <li class="relative" x-data="{showChildren:false}"
+                                        @mouseleave="showChildren=false" @mouseenter="showChildren=true">
+                                        <a href="/cook/cart"
+                                           class="px-4 flex w-full items-start hover:bg-gray-100 no-underline hover:no-underline transition-colors duration-100 cursor-pointer">
+                                            <span class="flex-1">My cart</span>
+                                        </a>
+                                    </li>
+                                    <li class="relative" x-data="{showChildren:false}"
+                                        @mouseleave="showChildren=false" @mouseenter="showChildren=true">
+                                        <a href="/cook/order"
+                                           class="px-4 flex w-full items-start hover:bg-gray-100 no-underline hover:no-underline transition-colors duration-100 cursor-pointer">
+                                            <span class="flex-1">My order</span>
+                                        </a>
+                                    </li>
+                                    <li class="relative" x-data="{showChildren:false}"
+                                        @mouseleave="showChildren=false" @mouseenter="showChildren=true">
+                                        <a @click.prevent="logout()"
+                                           class="px-4 flex w-full items-start hover:bg-gray-100 no-underline hover:no-underline transition-colors duration-100 cursor-pointer">
+                                            <span class="flex-1">Log out</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+
+            </template>
+
+        </div>
+    </div>
+</nav>
+
+
+<div class="container mx-auto px-4 py-12 mt-6" x-data="detailData()">
+    
+    <div class="flex">
+        
+        <div class="flex-1 max-w-md mr-8">
+            <img x-bind:src="getImage(cookDetail.url)" alt="Hotel Photo"/>
+        </div>
+
+        <div class="flex-1">
+            <form class="mt-4" x-data="addToCartData" @submit.prevent="addToCart">
+                <h2 class="text-2xl font-medium text-gray-800" x-text="cookDetail.name"></h2>
+                <input type="hidden" name="code" x-model="cookDetail.code"/>
+                 <p class="mt-2 text-gray-500" x-text="cookDetail.description">Szechuan Cuisine Classics, Delicious</p>
+
+                
+                <div class="mt-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Tasty</label>
+                    <div class="flex flex-wrap -mx-4">
+                        <div class="px-4 mb-4">
+                            <input type="radio" id="size_small" name="size" value="0" class="form-checkbox"
+                                   x-model="addToCartData.config.size" checked/>
+                            <label for="size_small" class="ml-2 text-gray-700">Normal</label>
+                        </div>
+                        <div class="px-4 mb-4">
+                            <input type="radio" id="size_medium" name="size" value="1"
+                                   x-model="addToCartData.config.size"
+                                   class="form-checkbox"/>
+                            <label for="size_medium" class="ml-2 text-gray-700">Light</label>
+                        </div>
+                        <div class="px-4 mb-4">
+                            <input type="radio" id="size_large" name="size" value="2"
+                                   x-model="addToCartData.config.size"
+                                   class="form-checkbox"/>
+                            <label for="size_large" class="ml-2 text-gray-700">Heavy</label>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div class="mt-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Level of spicy</label>
+                    <div class="flex flex-wrap -mx-4">
+                        <div class="px-4 mb-4">
+                            <input type="radio" id="taste_mild" name="taste" value="0" class="form-checkbox"
+                                   x-model="addToCartData.config.taste" checked/>
+                            <label for="taste_mild" class="ml-2 text-gray-700">Mild</label>
+                        </div>
+                        <div class="px-4 mb-4">
+                            <input type="radio" id="taste_medium" name="taste" value="1"
+                                   x-model="addToCartData.config.taste" class="form-checkbox"/>
+                            <label for="taste_medium" class="ml-2 text-gray-700">Medium</label>
+                        </div>
+                        <div class="px-4 mb-4">
+                            <input type="radio" id="taste_hot" name="taste" value="2" class="form-checkbox"
+                                   x-model="addToCartData.config.taste"/>
+                            <label for="taste_hot" class="ml-2 text-gray-700">Heavy</label>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div class="mt-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Ingredients</label>
+                    <div class="flex flex-wrap mb-4">
+                        <label class="inline-flex items-center mr-4 mb-2">
+                            <input type="radio" class="form-checkbox" name="ingredient" value="0"
+                                   x-model="addToCartData.config.ingredient"/>
+                            <span class="ml-2">Scallion</span>
+                        </label>
+                        <label class="inline-flex items-center mr-4 mb-2">
+                            <input type="radio" class="form-checkbox" name="ingredient" value="1"
+                                   x-model="addToCartData.config.ingredient"/>
+                            <span class="ml-2">Ginger</span>
+                        </label>
+                        <label class="inline-flex items-center mr-4 mb-2">
+                            <input type="radio" class="form-checkbox" name="ingredient" value="2"
+                                   x-model="addToCartData.config.ingredient"/>
+                            <span class="ml-2">Garlic</span>
+                        </label>
+                    </div>
+                </div>
+
+
+                <div class="mt-4">
+                    <div class="form-textarea mb-4">
+                        <label for="remark" class="block text-gray-700 text-sm font-bold mb-2">Personalized Description</label>
+                        <textarea id="remark" name="remark" rows="4" cols="80" placeholder="Personalized description information"
+                                  x-model="addToCartData.remark" class="form-textarea"
+                                  style="text-indent: 12px; letter-spacing: 1px;"></textarea>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-700" :disabled="formSubmitting">Add to Cart
+                    </button>
+                </div>
+
+            </form>
+        </div>
+
+
+    </div>
+
+
+    
+    <div class="mt-10">
+        <div class="grid grid-cols-4 gap-8" x-init="initReviewList">
+
+            <div class="relative">
+                <div class="flex ab">
+                    <div x-data="modalData">
+                        
+                        <button x-on:click="open = true" class="px-4 py-2 bg-indigo-500 text-white rounded-md">Star this dish</button>
+
+                        
+                        <div x-show="open"
+                             class="fixed inset-0 px-2 z-10 overflow-hidden flex items-center justify-center">
+                            <div x-show="open" x-transition:enter="transition-opacity ease-out duration-300"
+                                 x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                                 x-transition:leave="transition-opacity ease-in duration-300"
+                                 x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                                 class="absolute inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+
+
+                           
+                            <div x-show="open" x-transition:enter="transition-transform ease-out duration-300"
+                                 x-transition:enter-start="transform scale-75"
+                                 x-transition:enter-end="transform scale-100"
+                                 x-transition:leave="transition-transform ease-in duration-200"
+                                 x-transition:leave-start="transform scale-100"
+                                 x-transition:leave-end="transform scale-75"
+                                 class="bg-white rounded-md shadow-xl overflow-hidden max-w-md w-full sm:w-96 md:w-1/2 lg:w-2/3 xl:w-1/3 z-50">
+                                
+                                <div class="px-4 py-2 flex justify-between">
+                                    <h2 class="text-lg font-semibold">Comment your idea!</h2>
+
+                                    <div className="relative flex items-center mb-8 text-teal-500" >
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 hover:cursor-pointer"
+                                             x-on:click="open = false">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                                        </svg>
+                                    </div>
+                                </div>
+
+
+                                
+                                <div class="p-4">
+                                    <div class="flex-1">
+                                        <form class="mt-4" x-data="addReviewData" @submit.prevent="addReview">
+                                            <input type="hidden" name="code" x-model="cookDetail.code" />
+
+                                            <div class="mt-4">
+                                                <div class="form-textarea ">
+                                                    <label for="review" class="block text-gray-700 text-sm font-bold mb-2">Evaluations</label>
+                                                    <textarea id="review" name="review" rows="4" class="resize border rounded focus:outline-none focus:shadow-outline w-full"
+                                                              placeholder="Please enter a rating" x-model="addReviewData.review"
+                                                              style="text-indent: 12px; letter-spacing: 1px;"></textarea>
+                                                </div>
+
+                                                <div>
+                                                    <div class="flex space-x-3">
+                                                        <template x-for="(item, index) in [0,0,0,0,0]">
+                                                            <svg class="w-12 h-12 text-gray-500" :class="startAdjust(index) ? 'text-yellow-500' : 'text-gray-500'" xmlns="http://www.w3.org/2000/svg"
+                                                                 viewBox="0 0 20 20" fill="currentColor" x-on:click="handleStarts(index)">
+                                                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                                            </svg>
+                                                        </template>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="mt-4">
+                                                <button type="submit" class="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-700">Submission of evaluations</button>
+                                            </div>
+
+                                        </form>
+                                    </div>
+                                </div>
+
+
+                                
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <template x-for="review in reviewList">
+                <div class="mb-6 rounded-lg bg-white p-8 shadow-md">
+                    <div x-text="review.review"></div>
+                    <div class="mt-2"><span class="text-blue-500 font-bold" x-text="review.star"></span> Star rating</div>
+                </div>
+            </template>
+        </div>
+
+
+    </div>
+
+</div>
+
+<footer class="py-6  bg-gray-200 text-gray-900">
+    <div class="container px-6 mx-auto space-y-6 divide-y divide-gray-400 md:space-y-12 divide-opacity-50">
+        <!-- <div class="grid justify-center lg:justify-between"> -->
+        <div class="grid justify-center">
+            <div class="flex flex-col self-center text-sm text-center md:block lg:col-start-1 md:space-x-6">
+                <span>Copy right © 2024 by Group 33 </span>
+                <a rel="noopener noreferrer" href="/cook/privacy">
+                    <span>Privacy policy</span>
+                </a>
+                <a rel="noopener noreferrer" href="/cook/service">
+                    <span>Terms of service</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</footer>
+</body>
+
+
+<script>
+
+    document.addEventListener("DOMContentLoaded", function () {
+        echoUtil.checkLogin()
+    })
+
+    const timer = setInterval(() => {
+        echoUtil.checkLogin()
+    }, 1000 * 15)
+
+    window.onbeforeunload = function () {
+        timer && clearInterval(timer)
+        // return 'tip'
+    }
+
+    const homeData = () => {
+        return {
+            isLogin: echoUtil.isLogin(),
+            username: echoUtil.getUsername(),
+
+            logout() {
+                if (window.confirm('Confirm logging out？')) {
+                    window.echoApi.logout().then(response => {
+                        console.log(response)
+                    }).catch(error => {
+                        console.log(error)
+                    }).finally(() => {
+                        echoUtil.logoutAction()
+                    })
+                }
+            },
+        }
+    }
+
+
+    const detailData = () => {
+        let urlData = echoUtil.urlParamToJson(location.search)
+
+        return {
+            cookDetail: {
+                code: urlData['code'],
+                url: urlData['url'],
+                name: urlData['name'],
+                description: urlData['description'],
+            },
+
+            addToCartData: {
+                config: {
+                    size: '0',
+                    taste: '0',
+                    ingredient: '-1',
+                },
+                code: urlData['code'],
+                remark: '',
+            },
+
+            addReviewData: {
+                code: urlData['code'],
+                review: "",
+                start: 1,
+            },
+
+            reviewList: [],
+
+            modalData: {
+                open: false
+            },
+
+
+            initReviewList() {
+                that = this
+
+                window.echoApi.reviewList({
+                    productCode: urlData['code'],
+                }).then(response => {
+                    const { records, total } = response
+                    console.log('records=', records)
+
+                    if (!records) {
+                        that.reviewList = []
+                        return
+                    }
+
+                    that.reviewList.push(...records)
+                }).catch(error => {
+                    console.log(error)
+                })
+            },
+
+            startAdjust(index) {
+                return Number(index) < this.addReviewData.start
+            },
+
+            handleStarts(index) {
+                this.addReviewData.start = Number(index) + 1
+            },
+
+            parseDateTime(item) {
+                return echoUtil.timestamp2Date(Number(item.ctime))
+            },
+
+            getImage(url) {
+                return '/imgs/' + url
+            },
+
+            async addReview(){
+                if (window.confirm('Confirming the submission of a review？')) {
+                    console.log(this.addReviewData)
+
+                    this.modalData.open = false
+
+                    let res = await window.echoApi.addReview({
+                        'productCode': this.addReviewData.code,
+                        'review': this.addReviewData.review,
+                        'star': this.addReviewData.start,
+                    })
+
+                    if (res) {
+                        echoToast.success('Submitted successfully')
+                        setTimeout(() => {
+                            location.reload()
+                        }, 700)
+                    } else {
+                        echoToast.error('Failed to add comment')
+                    }
+                }
+            },
+
+            async addToCart() {
+                
+
+                if (window.confirm('Confirm adding to cart？')) {
+                    this.formSubmitting = true
+
+                    let res = await window.echoApi.addCart({
+                        'productCode': this.addToCartData.code,
+                        'quantity': 1,
+                        'config': this.addToCartData.config,
+                        'remark': this.addToCartData.remark,
+                    })
+
+                    if (res) {
+                        echoToast.success('Add successfully')
+                        setTimeout(() => {
+                            location.href = '/cook/cart'
+                        }, 700)
+                    } else {
+                        echoToast.error('Add Failure')
+                    }
+                    this.formSubmitting = false
+                }
+            }
+            , formSubmitting: false
+        }
+    }
+
+
+</script>
+
+</html>

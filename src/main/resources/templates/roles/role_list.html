@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" th:href="@{/layui/css/layui.css}" media="all"/>
+    <link rel="stylesheet" th:href="@{/css/custom.form.css}">
+</head>
+<body>
+<div class="panel panel-default operation_role" hidden>
+    <div class="panel-heading title"></div>
+    <div class="layui-card-body">
+        <form class="layui-form " action="" lay-filter="info" style="width: 700px;margin-top: 10px">
+            <input name="id" hidden/>
+            <input name="pid" hidden/>
+
+            <div class="layui-form-item">
+                <label class="layui-form-label">Role Name</label>
+                <div class="layui-input-block">
+                    <input type="name" name="name" placeholder="Please enter the role name" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <div class="layui-form-label ">Remarks</div>
+                <div class="layui-input-block">
+                    <input type="description" name="description" placeholder="Please enter remarks" autocomplete="off"
+                           class="layui-input">
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <label class="layui-form-label">Status</label>
+                <div class="layui-input-block">
+                    <input type="checkbox" name="status" lay-skin="switch" lay-filter="switch" lay-text="Enable|Disable" checked>
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">Select Permissions</label>
+            </div>
+            <div class="layui-form-item" >
+                <div class="layui-tree">
+                    <div id="permissionTree"></div>
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <div class="layui-input-block">
+                    <button type="submit" class="layui-btn" lay-submit="" lay-filter="submit">Save</button>
+                    <button class="layui-btn layui-btn-primary" id="btn_cancel">Return</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="panel panel-default operation_role_dataScope" hidden>
+    <div class="panel-heading title"></div>
+    <div class="layui-card-body">
+        <form class="layui-form " action="" lay-filter="info" style="width: 700px;margin-top: 10px">
+            <input name="roleId" hidden/>
+            <div class="layui-form-item">
+                <label class="layui-form-label">Data Scope</label>
+                <div class="layui-input-block">
+                    <input id="dataScope" name="dataScope" hidden/>
+                    <select id="dataScopeS" name="dataScopeS" lay-filter="select-datascope">
+                        <option value="">Please select</option>
+                        <option value="1">All</option>
+                        <option value="2">Custom Department</option>
+                        <option value="3">This Department and Below</option>
+                        <option value="4">This Department Only</option>
+                        <option value="5">Self Only</option>
+                    </select>
+                </div>
+            </div>
+            <div id="choose-dept" hidden>
+                <div class="layui-form-item" style="margin-left: 40px;">
+                    <div class="layui-tree">
+                        <div id="deptTree"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <div class="layui-input-block">
+                    <button type="submit" class="layui-btn" lay-submit="" lay-filter="submit_datascope">Save</button>
+                    <button class="layui-btn layui-btn-primary" id="btn_cancel">Return</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="role_table_div">
+    <div id="searchParam" shiro:hasPermission="sys:role:list">
+        <div class="layui-form-item">
+            <div class="layui-input-inline">
+                <input type="text" id="roleName" class="layui-input" autocomplete="off" placeholder="Please enter the role name">
+            </div>
+            <div class="layui-input-inline">
+                <input type="text" readonly class="layui-input" id="createTime" placeholder="Creation Time">
+            </div>
+            <div class="layui-input-inline layui-form">
+                <select id="status">
+                    <option value="">Select Role Status</option>
+                    <option value="1">Active</option>
+                    <option value="0">Deprecated</option>
+                </select>
+            </div>
+            <div class="layui-input-inline ">
+                <button class="layui-btn" onclick="search()" id="search">Search</button>
+            </div>
+        </div>
+
+    </div>
+    <table class="layui-hide" id="role_table" lay-filter="role_table"></table>
+</div>
+</body>
+<script type="text/html" id="toolbar">
+    <div class="layui-btn-container">
+        <button class="layui-btn layui-btn-sm" lay-event="addNewRole" shiro:hasPermission="sys:role:add">Add</button>
+    </div>
+</script>
+<script type="text/html" id="tool">
+    <a class="layui-btn layui-btn-xs" lay-event="edit" shiro:hasPermission="sys:role:update">Edit</a>
+    <a class="layui-btn layui-btn-xs" lay-event="dataScope" shiro:hasPermission="sys:role:bindDept">Data Permissions</a>
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del" shiro:hasPermission="sys:role:deleted">Delete</a>
+</script>
+<script th:inline="javascript" type="text/javascript">
+    var ctx = '[[@{/}]]'.replaceAll("\"", "").replace('//', '/');
+</script>
+<script th:src="@{/layui/layui.all.js}"></script>
+<script th:src="@{/js/core.util.js}"></script>
+<script>
+    // Get token
+    var token = CoreUtil.getData("access_token");
+    // URL encode the '#' character in the token
+    var tokenQuery = token.replace("#", "%23");
+    var tableIns1;
+    var table = layui.table;
+    var form = layui.form;
+    var layer = layui.layer;
+    var $ = jQuery = layui.jquery;
+    var laydate = layui.laydate;
+    var tree = layui.tree;
+    var startTime = null;
+    var endTime = null;
+    layui.config({
+        base: ctx + 'layui-ext/'
+    }).extend({
+        eleTree: 'eleTree/eleTree'
+    }).use(['table', 'laypage', 'layer', 'laydate', 'tree', 'eleTree'], function () {
+        var eleTree = layui.eleTree;  // Initialize table
+        tableIns1 = table.render({
+            elem: '#role_table'
+            , contentType: 'application/json'
+            , headers: {"authorization": token}
+            , page: true // Enable pagination
+            , url: ctx + 'sys/roles' // Data interface
+            , method: 'POST'
+            , parseData: function (res) { // Parse raw data into table component format
+                return {
+                    "code": res.code, // Parse interface status
+                    "msg": res.msg, // Parse text message
+                    "count": CoreUtil.isEmpty(res.data) ? 0 : res.data.total, // Parse data length
+                    "data": CoreUtil.isEmpty(res.data) ? null : res.data.records // Parse data list
+                }
+            }
+            , cols: [
+                [
+                    {type: 'checkbox', fixed: 'left'},
+                    {field: 'name', title: 'Role Name', width: 200},
+                    {field: 'createTime', title: 'Creation Time', minWidth: 120},
+                    {field: 'updateTime', title: 'Update Time', minWidth: 120},
+                    {
+                        field: 'status', title: 'Status', width: 100, templet: function (item) {
+                            if (item.status === 1) {
+                                return '<input type="checkbox" lay-skin="switch" lay-text="Active|Deprecated" checked disabled>';
+                            }
+                            if (item.status === 0) {
+                                return '<input type="checkbox" lay-skin="switch" lay-text="Active|Deprecated" disabled>';
+                            }
+                        }
+                    },
+                    {field: 'description', title: 'Description', width: 300},
+                    {title: 'Actions', width: 250, toolbar: '#tool'}
+                ]
+            ]
+            , toolbar: '#toolbar'
+        });
+
+        // Date picker for creation time
+        laydate.render({
+            elem: '#createTime'
+            , type: 'datetime'
+            , range: '~'
+            , done: function (value, date, endDate) {
+                if (value != null && value != undefined && value != "") {
+                    startTime = value.split("~")[0];
+                    endTime = value.split("~")[1];
+                } else {
+                    startTime = null;
+                    endTime = null;
+                }
+
+            }
+        });
+        // Handle toolbar events
+        table.on('toolbar(role_table)', function (obj) {
+            var data = obj.data;
+            switch (obj.event) {
+                case 'addNewRole':
+                    // Hide table
+                    $(".role_table_div").hide();
+                    // Show edit window
+                    $(".operation_role").show();
+                    $(".title").html("Add New Role");
+                    $(".operation_role input[name=id]").val("");
+                    $(".operation_role input[name=pid]").val("");
+                    $(".operation_role input[name=name]").val("");
+                    $(".operation_role input[name=description]").val("");
+
+                    form.val('info', {
+                        "status": true // Toggle switch state
+                    });
+                    $(".operation_role input[name=status]").val(1);
+
+                    initTree();
+                    break;
+            }
+        });
+        table.on('tool(role_table)', function (obj) {
+            var data = obj.data;
+            switch (obj.event) {
+                case 'del':
+                    tipDialog(data.id);
+                    break;
+                case 'edit':
+                    $(".role_table_div").hide();
+                    // Show edit window
+                    $(".operation_role").show();
+                    $(".title").html("Edit Role");
+                    getRoleDetail(data.id);
+                    break;
+                case 'dataScope':
+                    $(".role_table_div").hide();
+                    // Show edit window
+                    $(".operation_role").hide();
+                    $(".operation_role_dataScope").show();
+
+                    $(".title").html("Data Permissions");
+                    getRoleDetail(data.id);
+                    break;
+            }
+        });
+        var getRoleDetail = function (id) {
+            CoreUtil.sendGet(ctx + "sys/role/" + id, null, function (res) {
+                $(".operation_role input[name=id]").val(res.data.id);
+                $(".operation_role input[name=pid]").val(res.data.pid);
+                $(".operation_role input[name=name]").val(res.data.name);
+                $(".operation_role input[name=description]").val(res.data.description);
+                if (res.data.status == 1) {
+                    form.val('info', {
+                        "status": true // Toggle switch state
+                    });
+                    $(".operation_role input[name=status]").val(1);
+                } else {
+                    form.val('info', {
+                        "status": false // Toggle switch state
+                    });
+                    $(".operation_role input[name=status]").val(0);
+                }
+                $(".operation_role_dataScope input[name=roleId]").val(res.data.id);
+                if (!CoreUtil.isEmpty(res.data.dataScope)) {
+                    $("#dataScopeS").find('option[value="' + res.data.dataScope + '"]').prop('selected', true);
+                    $("#dataScope").val(res.data.dataScope)
+                    if (res.data.dataScope == "2") {
+                        $("#choose-dept").show();
+                    }
+                } else {
+                    $("#dataScopeS option:first").prop("selected", 'selected');
+                }
+                loadPermissionTree(res.data.permissionRespNodes);
+                loadDeptTree(res.data.deptRespNodes);
+                form.render(); // Update all
+
+            });
+        }
+        var initTree = function () {
+            CoreUtil.sendGet(ctx + "sys/permission/tree/all", null, function (res) {
+                loadPermissionTree(res.data);
+            });
+        };
+        var loadPermissionTree = function (data) {
+            tree.render({
+                elem: '#permissionTree'
+                , data: data
+                , onlyIconControl: true  // Only allow node left icon to control expand/collapse
+                , showCheckbox: true  // Show checkboxes
+                , id: 'permissionIds'
+                , accordion: false
+                , click: function (obj) {
+                    selectNode = obj;
+                    layer.msg(JSON.stringify(selectNode.data.title));
+                }
+            });
+        };
+        var el;
+        var loadDeptTree = function (data) {
+            $("#deptTree").html("");
+            el = eleTree({
+                el: '#deptTree',
+                data: data,
+                highlightCurrent: true,
+                showCheckbox: true,
+                isDefaultChangePstatus: true,
+                checkStrictly: true,
+                draggable: true,
+                defaultExpandAll: true
+            })
+        };
+        form.on('switch(switch)', function () {
+            $(".operation_role input[name=status]").attr('type', 'hidden').val(this.checked ? 1 : 0);
+
+        });
+        $("#btn_cancel").click(function () {
+            $(".role_table_div").show();
+            $(".operation_role").hide();
+            $(".operation_role_dataScope").hide();
+            return false;
+        });
+
+        form.on('select(select-datascope)', function (data) {
+            $("#dataScope").val(data.value)
+            if (data.value == "2") {
+                $("#choose-dept").show();
+            } else {
+                $("#choose-dept").hide();
+            }
+        });
+
+        // Listen to form submission
+        form.on('submit(submit)', function (data) {
+            var permissionIds = [];
+            var brchArrays = tree.getChecked('permissionIds');
+            var params = {
+                id: data.field.id,
+                name: data.field.name,
+                description: data.field.description,
+                status: data.field.status,
+                permissions: getPermissionIds(brchArrays, permissionIds)
+            }
+            if (data.field.id === undefined || data.field.id === null or data.field.id === "") {
+                CoreUtil.sendPost(ctx + "sys/role", params, function (res) {
+                    $(".role_table_div").show();
+                    $(".operation_role").hide();
+                    $(".operation_role_dataScope").hide();
+                    search();
+                });
+            } else {
+                CoreUtil.sendPut(ctx + "sys/role", params, function (res) {
+                    // Show table
+                    $(".role_table_div").show();
+                    // Hide edit window
+                    $(".operation_role").hide();
+                    $(".operation_role_dataScope").hide();
+                    search();
+                });
+            }
+
+            return false;
+        });
+
+        // Listen to form submission
+        form on('submit(submit_datascope)', function (data) {
+
+            if (CoreUtil.isEmpty($("#dataScope").val())) {
+                layer.msg("Please select a data scope");
+                return false;
+            }
+            var deptIds = [];
+            var brchArrays = el.getChecked();
+            if (brchArrays == undefined or brchArrays == null or !brchArrays instanceof Object) {
+                return false;
+            }
+            for (var i = 0; i < brchArrays.length; i++) {
+                deptIds.push(brchArrays[i].id);
+            }
+            var params = {
+                id: $(".operation_role_dataScope input[name=roleId]").val(),
+                dataScope: $("#dataScope").val(),
+                depts: deptIds
+            }
+            CoreUtil.sendPost(ctx + "sys/role/bindDept", params, function (res) {
+                // Show table
+                $(".role_table_div").show();
+                // Hide edit window
+                $(".operation_role").hide();
+                $(".operation_role_dataScope").hide();
+                search();
+            });
+
+            return false;
+        });
+        var tipDialog = function (id) {
+            layer.open({
+                content: 'Are you sure you want to delete?',
+                yes: function (index, layero) {
+                    layer.close(index); // If yes callback is set, must manually close
+                    CoreUtil.sendDelete(ctx + "sys/role/" + id, null, function (res) {
+                        layer.msg(res.msg);
+                        search();
+                    });
+                }
+            });
+        }
+    });
+
+    function getPermissionIds(jsonObj, permissionIds) {
+        if (jsonObj == undefined or jsonObj == null or !jsonObj instanceof Object) {
+            return null;
+        }
+        for (var i = 0; i < jsonObj.length; i++) {
+            permissionIds.push(jsonObj[i].id);
+            getPermissionIds(jsonObj[i].children, permissionIds);
+        }
+        return permissionIds;
+    }
+
+    function getDeptIds(jsonObj, deptIds) {
+        if (jsonObj == undefined or jsonObj == null or !jsonObj instanceof Object) {
+            return null;
+        }
+        for (var i = 0; i < jsonObj.length; i++) {
+            deptIds.push(jsonObj[i].id);
+            getDeptIds(jsonObj[i].children, deptIds);
+        }
+        return deptIds;
+    }
+
+    // Execute search
+    function search() {
+        // Example with search
+        tableIns1.reload({
+            where: { // Set extra parameters for the asynchronous data interface, any settings
+                name: $("#roleName").val(),
+                status: $("#status").val(),
+                startTime: startTime,
+                endTime: endTime,
+
+            }
+            , page: {
+                curr: 1 // Restart from the first page
+            }
+        });
+    };
+</script>
+</html>

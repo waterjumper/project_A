@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" th:href="@{/layui/css/layui.css}"/>
+    <link rel="stylesheet" th:href="@{/css/custom.form.css}">
+</head>
+<body>
+<div class="panel panel-default operation_menu" hidden>
+    <div class="panel-heading title"></div>
+    <div class="layui-card-body">
+        <form class="layui-form " action="" lay-filter="info" style="width: 700px;margin-top: 10px">
+            <input name="id" hidden/>
+            <input name="pid" hidden/>
+            <div class="layui-form-item">
+                <label class="layui-form-label">Type</label>
+                <div class="layui-input-block">
+                    <input type="radio" name="type" value="1" title="Directory" checked="" lay-filter="radio-type">
+                    <input type="radio" name="type" value="2" title="Menu" lay-filter="radio-type">
+                    <input type="radio" name="type" value="3" title="Button" lay-filter="radio-type">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">Menu Name</label>
+                <div class="layui-input-block">
+                    <input type="name" name="name" placeholder="Please enter the menu name" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <div class="layui-form-label ">Parent Menu</div>
+                <div class="layui-input-block">
+                    <input type="pidName" name="pidName" placeholder="Please select the parent menu" autocomplete="off" class="layui-input"
+                           readonly="readonly" style="background:#eeeeee!important">
+                </div>
+            </div>
+            <div class="layui-form-item menu_url">
+                <label class="layui-form-label ">API URL</label>
+                <div class="layui-input-block">
+                    <input type="text" name="url" placeholder="Please enter the API URL" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item menu_target">
+                <label class="layui-form-label ">target</label>
+                <div class="layui-input-block">
+                    <input type="radio" name="target" value="_self" title="_self" checked="">
+                    <input type="radio" name="target" value="_blank" title="_blank">
+                </div>
+            </div>
+
+            <div class="layui-form-item menu-perms" hidden>
+                <div class="layui-form-label">Permission Identifier</div>
+                <div class="layui-input-block">
+                    <input type="perms" name="perms" placeholder="Please enter the permission identifier, e.g., sys:user:list" autocomplete="off"
+                           class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item menu_icon" hidden>
+                <div class="layui-form-label">Icon</div>
+                <div class="layui-input-block">
+                    <input type="text" id="iconPicker" name="icon" lay-filter="iconPicker" class="layui-input">
+
+                </div>
+            </div>
+
+
+            <div class="layui-form-item">
+                <div class="layui-form-label">Sort Order</div>
+                <div class="layui-input-block">
+                    <input type="text" name="orderNum" lay-verify="number" onkeyup="value=zhzs(this.value)"
+                           placeholder="Please enter sort order" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">Status</label>
+                <div class="layui-input-block">
+                    <input type="checkbox" name="status" lay-skin="switch" lay-filter="switch" lay-text="Enable|Disable" checked>
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <div class="layui-input-block">
+                    <button type="submit" class="layui-btn" lay-submit="" lay-filter="submit">Save</button>
+                    <button class="layui-btn layui-btn-primary" id="btn_cancel">Return</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="menu-table">
+    <table class="layui-table" id="menuTable" lay-filter="menuTable"></table>
+</div>
+<div id="menuTree" style="display: none"></div>
+<script type="text/html" id="toolbar">
+    <div class="layui-btn-container">
+        <button class="layui-btn layui-btn-sm" lay-event="addMenu" shiro:hasPermission="sys:permission:add">Add</button>
+    </div>
+</script>
+<script type="text/html" id="tool">
+    <a class="layui-btn layui-btn-xs" lay-event="edit" shiro:hasPermission="sys:permission:update">Edit</a>
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del"
+       shiro:hasPermission="sys:permission:deleted">Delete</a>
+</script>
+<script th:inline="javascript" type="text/javascript">
+    var ctx = '[[@{/}]]'.replaceAll("\"", "").replace('//', '/');
+</script>
+<script th:src="@{/layui/layui.all.js}"></script>
+<script th:src="@{/js/core.util.js}"></script>
+<script th:inline="none">
+    var layer = layui.layer;
+    var $ = jQuery = layui.jquery;
+    var form = layui.form;
+    var element = layui.element;
+    var treetable;
+    var selectNode = null;
+    var iconPicker;
+    layui.config({
+        base: ctx + 'layui-ext/'
+    }).extend({
+        treetable: 'treetable-lay/treetable',
+        iconPicker: 'icon/iconPicker'
+    }).use(['treetable', 'table', 'tree',"iconPicker"], function () {
+        var reloadTreeTable = function () {
+            CoreUtil.sendGet(ctx + "sys/permissions", null, function (res) {
+                renderTable(res.data);
+            });
+        };
+        reloadTreeTable();
+        treetable = layui.treetable;
+        iconPicker = layui.iconPicker;
+        var table = layui.table;
+        var tree = layui.tree;
+        var renderTable = function (data) {
+            treetable.render({
+                // Render the table
+                data: data,
+                treeColIndex: 1, // Tree icon displayed in which column
+                treeSpid: 0, // Top-level parent id
+                treeIdName: 'id', // Name of ID field
+                treePidName: 'pid', // Name of PID field
+                treeDefaultClose: false, // Default collapsed
+                treeLinkage: false, // Auto-expand all children when a parent is expanded
+                elem: '#menuTable', // Table ID
+                page: false, // Tree table usually does not have pagination
+                toolbar: '#toolbar',
+                cols: [
+                    [
+                        {type: 'numbers'},
+                        {field: 'name', width: 150, title: 'Menu Name'},
+                        {field: 'url', width: 150, title: 'url'},
+                        {field: 'icon', width: 80, title: 'Icon', templet:function (item) {
+                                return '<i class="icon-color layui-icon '+item.icon+'"></i>';
+                            }},
+                        {field: 'target', width: 80, title: 'target'},
+                        {
+                            field: 'type', width: 70, title: 'Type', templet: function (item) {
+                                if (item.type === 1) {
+                                    return '  <a class="layui-btn layui-btn-xs" >Directory</a>';
+                                }
+                                if (item.type === 2) {
+                                    return '<a class="layui-btn layui-btn-xs layui-btn-normal" >Menu</a>';
+                                }
+                                if (item.type === 3) {
+                                    return '<a class="layui-btn layui-btn-xs layui-btn-warm " >Button</a>';
+                                }
+                            }
+                        },
+                        {field: 'pidName', title: 'Parent Name'},
+                        {field: 'orderNum', title: 'Sort', width: 70},
+                        {field: 'perms', title: 'Resource Identifier', width: 150},
+                        {field: 'createTime', title: 'Creation Time', Width: 150},
+                        {
+                            field: 'status', title: 'Status', width: 100, templet: function (item) {
+                                if (item.status === 1) {
+                                    return '  <input type="checkbox" lay-skin="switch" lay-text="Enable|Disable" checked disabled>';
+                                }
+                                if (item.status === 0) {
+                                    return '  <input type="checkbox" lay-skin="switch" lay-text="Enable|Disable" disabled>';
+                                }
+                            }
+                        },
+                        {title: 'Actions', width: 180, toolbar: '#tool'}
+                    ]
+                ]
+            });
+
+        };
+        table.on('toolbar(menuTable)', function (obj) {
+            var data = obj.data;
+            switch (obj.event) {
+                case 'addMenu':
+                    selectNode = null;
+                    $(".menu-table").hide();
+                    $(".operation_menu").show();
+                    $(".title").html("Add Menu Permission");
+                    initRadio(1);
+                    $(".menu-perms").hide();
+                    $(".menu_target").hide();
+                    $(".menu_url").hide();
+                    $(".menu_icon").show();
+                    form.val('info', {
+                        "id": ""
+                        ,"pid": ""
+                        ,"name": ""
+                        ,"pidName": ""
+                        ,"url": ""
+                        ,"perms": ""
+                        ,"orderNum": ""
+                        ,"target": "_self"
+                    });
+                    $("input[name='icon']").attr("value","")
+                    iconPicker.checkIcon('iconPicker', '');
+                    if ($("#reset_icon").length === 0){
+                        $(".layui-select-title").append("<a id='reset_icon' onclick='resetIcon()' class=\"layui-btn  layui-btn-danger layui-btn-sm\">Reset</a>")
+                    }
+                    form.val('info', {
+                        "status": true //Switch state
+                    });
+                    $(".operation_menu input[name=status]").val(1);
+
+                    initTree("");
+                    break;
+            }
+        });
+
+
+        iconPicker.render({
+            // Selector, recommended to use input
+            elem: '#iconPicker',
+            // Data type: fontClass/unicode, fontClass recommended
+            type: 'fontClass',
+            // Enable search: true/false
+            search: true,
+            // Enable pagination
+            page: true,
+            // Number of items per page, default 12
+            limit: 12,
+            // Click callback
+            click: function (data) {
+                console.log(data);
+            }
+        });
+
+        table.on('tool(menuTable)', function (obj) {
+            var data = obj.data;
+            switch (obj.event) {
+                case 'del':
+                    deletedMenu(data.id, data.name);
+                    break;
+                case 'edit':
+                    selectNode = null;
+                    $(".menu-table").hide();
+                    $(".operation_menu").show();
+                    $(".title").html("Edit Menu Permission");
+                    initRadio(data.type);
+                    form.val('info', {
+                        "target": data.target
+                        ,"id": data.id
+                        ,"pid": data.pid
+                        ,"name": data.name
+                        ,"pidName": data.pidName
+                        ,"url": data.url
+                        ,"perms": data.perms
+                        ,"orderNum": data.orderNum
+                    });
+                    if (!CoreUtil.isEmpty(data.icon)) {
+                        iconPicker.checkIcon('iconPicker', data.icon);
+                    } else {
+                        iconPicker.checkIcon('iconPicker', "");
+                    }
+                    if ($("#reset_icon").length === 0){
+                        $(".layui-select-title").append("<a id='reset_icon' onclick='resetIcon()' class=\"layui-btn  layui-btn-danger layui-btn-sm\">Reset</a>")
+                    }
+                    $("input[name='icon']").attr("value",data.icon)
+                    if (data.status == 1) {
+                        form.val('info', {
+                            "status": true //Switch status
+                        });
+                        $(".operation_menu input[name=status]").val(1);
+                    } else {
+                        form.val('info', {
+                            "status": false //Switch status
+                        });
+                        $(".operation_menu input[name=status]").val(0);
+                    }
+                    form.render(); //Update all
+                    initTree(data.id);
+                    break;
+            }
+        });
+        var deletedMenu = function (menuId, menuName) {
+            layer.open({
+                content: 'Are you sure you want to delete ' + menuName + "?",
+                yes: function (index, layero) {
+                    layer.close(index); //If yes callback is set, must manually close
+                    CoreUtil.sendDelete(ctx + "sys/permission/" + menuId, null, function (res) {
+                        layer.msg(res.msg);
+                        reloadTreeTable();
+                    });
+                }
+            });
+        };
+        var initTree = function (id) {
+            var param = {permissionId: id}
+            CoreUtil.sendGet(ctx + "sys/permission/tree", param, function (res) {
+                loadDeptTree(res.data);
+            });
+        };
+        var loadDeptTree = function (data) {
+            tree.render({
+                elem: '#menuTree'
+                , data: data
+                , onlyIconControl: true  //Only allow node left icon to control expand/collapse
+                , click: function (obj) {
+                    selectNode = obj;
+                    layer.msg(JSON.stringify(selectNode.data.title));
+                }
+            });
+        };
+        form.on('switch(switch)', function () {
+            $(".operation_menu input[name=status]").attr('type', 'hidden').val(this.checked ? 1 : 0);
+
+        });
+
+        var initRadio = function (value) {
+            var radio = document.getElementsByName("type");
+            var radioLength = radio.length;
+            for (var i = 0; i < radioLength; i++) {
+                if (value == radio[i].value) {
+                    $(radio[i]).next().click();
+                }
+
+            }
+        };
+        $("#btn_cancel").click(function () {
+            $(".menu-table").show();
+            $(".operation_menu").hide();
+            return false;
+        });
+
+
+        $(".operation_menu input[name=pidName]").click(function () {
+            layer.open({
+                type: 1,
+                skin: 'layui-layer-molv',
+                title: "Select Menu",
+                area: ['400px', '450px'],
+                shade: 0,
+                shadeClose: false,
+                content: jQuery("#menuTree"),
+                btn: ['OK', 'Cancel'],
+                yes: function (index) {
+                    if (selectNode.data != null) {
+                        $(".operation_menu input[name=pid]").val(selectNode.data.id);
+                        $(".operation_menu input[name=pidName]").val(selectNode.data.title);
+                    }
+
+                    layer.close(index);
+                }
+            });
+        });
+
+        form.on('submit(submit)', function (data) {
+            console.log(data)
+            if (data.field.id === undefined || data.field.id === null || data.field.id === "") {
+                CoreUtil.sendPost(ctx + "sys/permission", data.field, function (res) {
+                    reloadTreeTable();
+                    $(".menu-table").show();
+                    $(".operation_menu").hide();
+                });
+            } else {
+                CoreUtil.sendPut(ctx + "sys/permission", data.field, function (res) {
+                    reloadTreeTable();
+                    $(".menu-table").show();
+                    $(".operation_menu").hide();
+                });
+            }
+            return false;
+        });
+        form.on('radio(radio-type)', function (data) {
+            if (data.value == '1') {
+                $(".menu-perms").hide();
+                $(".menu_target").hide();
+                $(".menu_url").hide();
+                $(".menu_icon").show();
+            } else if(data.value == '2'){
+                $(".menu-perms").hide();
+                $(".menu_target").show();
+                $(".menu_url").show();
+                $(".menu_icon"). show();
+            } else{
+                $(".menu-perms").show();
+                $(".menu_target").hide();
+                $(".menu_url"). show();
+                $(".menu_icon"). hide();
+            }
+        });
+
+
+    });
+
+    function zhzs(value) {
+
+        value = value.replace(/[^\d]/g, '');
+        if ('' != value) {
+            value = parseInt(value);
+        }
+        return value;
+    }
+
+    function resetIcon(){
+        iconPicker.checkIcon('iconPicker', '');
+        $("input[name='icon']").attr("value","")
+    }
+
+</script>
+</body>
+</html>
