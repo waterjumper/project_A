@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" th:href="@{/layui/css/layui.css}" media="all" />
+    <link rel="stylesheet" th:href="@{/css/custom.form.css}">
+    <style>
+        .custom-tree-item-clicked {
+            color: #FC9003
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- 录入菜品 -->
+    <div class="panel panel-default operation_user" hidden>
+        <div class="panel-heading title"></div>
+        <div class="layui-card-body">
+            <form class="layui-form " action="" lay-filter="info" style="width: 700px;margin-top: 10px">
+                <input name="id" hidden />
+                <input type="hidden" name="code" id="hidden_code" />
+
+                <!-- <div class="layui-form-item">
+                    <label class="layui-form-label">菜品code</label>
+                    <div class="layui-input-block">
+                        <input type="hidden" name="code" id="hidden_code" />
+                        <span class="layui-badge layui-bg-black" id="cook_code"></span>
+                        <span class="layui-badge layui-bg-blue" id="gen_code" style="cursor:pointer;">生成</span>
+                    </div>
+                </div> -->
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label">Dish name</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="name" placeholder="Please enter the dish name" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label">Unit price of dishes</label>
+                    <div class="layui-input-block">
+                        <!-- <input type="text" name="price" placeholder="请输入菜品单价" autocomplete="off" class="layui-input" /> -->
+                        <input type="number" name="price" lay-affix="number" value="10" class="layui-input">
+                    </div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label">Picture of dishes</label>
+                    <input type="hidden" name="url" id="cook_url" />
+
+                    <div class="layui-input-inline ">
+                        <button type="button" class="layui-btn layui-btn-fluid" id="upload">
+                            <i class="layui-icon ">&#xe67c;</i>Upload pictures
+                        </button>
+
+                        <div id="echo_progress" style="margin-top: 4px;">
+                            <div class="layui-upload-list">
+                                <img class="layui-upload-img" id="ID-upload-demo-img"
+                                    style="width: 100%; height: 100%;object-fit: cover;" />
+                                <div id="ID-upload-demo-text"></div>
+                            </div>
+
+                            <div class="layui-progress layui-progress-big" lay-showPercent="true"
+                                lay-filter="demo-filter-progress">
+                                <div class="layui-progress-bar layui-bg-green" lay-percent="0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label">Description of dishes</label>
+
+                    <div class="layui-input-block">
+                        <textarea name="description" placeholder="多行文本框" class="layui-textarea"></textarea>
+                    </div>
+                </div>
+
+                <div class="layui-form-item">
+                    <div class="layui-input-block">
+                        <button type="submit" class="layui-btn" lay-submit="" lay-filter="submit">Add</button>
+                        <button class="layui-btn layui-btn-primary" id="btn_cancel">Return</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <div class="layui-fluid">
+        <div class="layui-row layui-col-space15">
+            <!-- 查询表单 -->
+            <div class="layui-col-sm12 layui-col-lg10">
+                <div class="user_table_div">
+                    <div id="searchParam" shiro:hasPermission="sys:user:list">
+
+
+                        <div class="layui-form-item">
+                            <div class="layui-input-inline">
+                                <input type="text" id="name" name="name" class="layui-input" autocomplete="off"
+                                    placeholder="Please enter the dish name">
+                            </div>
+                            <div class="layui-input-inline">
+                                <input type="text" id="code" name="code" class="layui-input" autocomplete="off"
+                                    placeholder="Please enter the dish code">
+                            </div>
+                            
+                            <div class="layui-input-inline ">
+                                <button class="layui-btn" onclick="search()" id="search">Search for dishes</button>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <table class="layui-hide" id="user_table" lay-filter="user_table"></table>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+</body>
+<script type="text/html" id="toolbar">
+    <div class="layui-btn-container">
+        <button class="layui-btn layui-btn-sm" lay-event="addNewUser" shiro:hasPermission="sys:user:add">Add new dish</button>
+        <!-- <button class="layui-btn layui-btn-sm" lay-event="batchDeleted" shiro:hasPermission="sys:user:deleted">删除菜品</button> -->
+    </div>
+</script>
+<script type="text/html" id="tool">
+    <!-- <a class="layui-btn  layui-btn-xs" lay-event="operationRole" shiro:hasPermission="sys:user:role:update">赋予角色</a> -->
+    <a class="layui-btn layui-btn-xs" lay-event="edit" shiro:hasPermission="sys:user:update">Edit</a>
+    <!-- <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del" shiro:hasPermission="sys:user:deleted">删除</a> -->
+</script>
+<script th:inline="javascript" type="text/javascript">
+    var ctx = '[[@{/}]]'.replaceAll("\"", "").replace('//', '/');
+</script>
+<script th:src="@{/layui/layui.all.js}"></script>
+<script th:src="@{/js/core.util.js}"></script>
+<script>
+
+    function timestampToDate(Timestamp) {
+        let now = new Date(Timestamp),
+            y = now.getFullYear(),
+            m = now.getMonth() + 1,
+            d = now.getDate();
+
+        return y + "-" + (m < 10 ? "0" + m : m) + "-" + (d < 10 ? "0" + d : d) + " " + now.toTimeString().substr(0, 8);
+    }
+
+
+    function generateRandomString(length) {
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        let result = '';
+
+        for (let i = 0; i < length; i++) {
+            result += characters.charAt(Math.floor(Math.random() * characters.length));
+        }
+
+        return result;
+    }
+
+    function isEmpty(obj) {
+        return obj === undefined || obj === null || obj.trim() === ""
+    }
+
+    //获取token
+    var token = CoreUtil.getData("access_token");
+    //地址栏转义token中的#号
+    var tokenQuery = token.replace("#", "%23");
+    var tableIns1;
+    var table = layui.table;
+    var form = layui.form;
+    var layer = layui.layer;
+    var $ = jQuery = layui.jquery;
+    var laydate = layui.laydate;
+    var tree = layui.tree;
+    var transfer = layui.transfer;
+    var deptNo = null;
+    var startTime = null;
+    var endTime = null;
+    var upload = layui.upload;
+    var element = layui.element;
+    var util = layui.util;
+
+    var echo_progress = $("#echo_progress")
+    var cook_code = $("#cook_code")
+    // var gen_code = $("#gen_code")
+    var hidden_code = $("#hidden_code")
+    var cook_url = $("#cook_url")
+
+    // var r_code = generateRandomString(8) + Date.now() + generateRandomString(8);
+    // cook_code.text(r_code);
+    // hidden_code.val(r_code);
+
+    // gen_code.click(function () {
+    //     var r_code = generateRandomString(8) + Date.now() + generateRandomString(8);
+    //     cook_code.text(r_code);
+    //     hidden_code.val(r_code);
+    // })
+
+
+    layui.use(['table', 'layer', 'laydate', 'tree', 'transfer', 'upload', 'element', 'util'], function () {
+
+        // initLeftTree();
+
+        // 文件上传
+        var lay_op = null;
+
+        var uploadInst = upload.render({
+            elem: '#upload' //绑定元素
+
+            // 限制文件大小，单位 KB
+            , size: 5 * 1024
+            , images: 'images'
+            , url: ctx + 'sysFiles/upload?authorization=' + tokenQuery //上传接口
+            , before: function (obj) {
+                // echo_progress.show();
+
+                // 预读本地文件示例
+                obj.preview(function (index, file, result) {
+                    $('#ID-upload-demo-img').attr('src', result);
+                });
+
+                // 进度条复位
+                element.progress('demo-filter-progress', '0%');
+
+                lay_op = layer.open({
+                    type: 1,
+                    area: ['420px', '20px'], // 宽高
+                    title: false, // 不显示标题栏
+                    closeBtn: 0,
+                    shadeClose: false, // 点击遮罩关闭层
+                    content: '<div style="padding: 16px;">图片上传中...</div>'
+                });
+
+                // 上传 loading
+                // layer.load();
+            }
+            , progress: function (n, elem, res, index) {
+                console.log('progress n=', n);
+
+                var percent = n + '%' // 获取进度百分比
+                element.progress('demo-filter-progress', percent); // layui 进度条元素使用
+            }
+            , done: function (res, size, upload) { // 上传完毕回调
+                // console.log('file down res=', res)
+
+                // console.log('file down size=', size, "\t upload=", upload)
+                // echo_progress.hide()
+                layer.close(lay_op)
+
+                let { data } = res;
+                if (data && data['path']) {
+                    cook_url.val(data['path'])
+                    layer.msg('文件上传成功', { icon: 1, time: 1000 });
+                }
+            }
+            , error: function (index, upload) {
+                //请求异常回调
+                // console.error('file error index=', index, "\t upload=", upload)
+
+                // echo_progress.hide()
+                layer.close(lay_op)
+                layer.msg('文件上传失败', { icon: 2, time: 1000 });
+            }
+        });
+
+        // 加载table
+        tableIns1 = table.render({
+            elem: '#user_table'
+            , contentType: 'application/json'
+            , headers: { "authorization": token }
+            , page: true //开启分页
+            , url: ctx + 'sys/dishes/pageList' //数据接口
+            , method: 'POST'
+            , parseData: function (res) { //将原始数据解析成 table 组件所规定的数据
+                return {
+                    "code": res.code, //解析接口状态
+                    "msg": res.msg, //解析提示文本
+                    "count": CoreUtil.isEmpty(res.data) ? 0 : res.data.total, //解析数据长度
+                    "data": CoreUtil.isEmpty(res.data) ? null : res.data.records //解析数据列表
+                }
+            }
+            , cols: [
+                [
+                    // { type: 'checkbox', fixed: 'left' },
+                    { field: 'name', title: 'NAME', width: 130 },
+                    { field: 'price', title: 'PRICE', width: 120 },
+                    { field: 'description', title: 'DESCRIBE', width: 120 },
+                    { field: 'code', title: 'code' },
+                    {
+                        field: 'ctime', title: 'CREATION TIME', templet: function (item) {
+                            time = item.ctime
+                            if (!time) {
+                                time = Date.now()
+                            } else {
+                                time = Number(time)
+                            }
+
+                            return timestampToDate(time)
+                        }
+                    },
+                    {
+                        field: 'utime', title: 'UPDATE TIME', templet: function (item) {
+                            time = item.utime
+                            if (!time) {
+                                time = Date.now()
+                            } else {
+                                time = Number(time)
+                            }
+
+                            return timestampToDate(time)
+                        }
+                    },
+                    { width: 300, toolbar: "#tool", title: '操作' }
+                ]
+            ]
+            , toolbar: '#toolbar'
+        });
+
+        laydate.render({
+            elem: '#createTime'
+            , type: 'datetime'
+            , range: '~'
+            , done: function (value, date, endDate) {
+                if (value != null && value != undefined && value != "") {
+                    startTime = value.split("~")[0];
+                    endTime = value.split("~")[1];
+                } else {
+                    startTime = null;
+                    endTime = null;
+                }
+
+            }
+        });
+
+        table.on('toolbar(user_table)', function (obj) {
+            var checkStatus = table.checkStatus(obj.config.id);
+            switch (obj.event) {
+                case 'batchDeleted':
+                    var checkStatus = table.checkStatus(obj.config.id);
+                    var data = checkStatus.data;
+                    if (data.length == 0) {
+                        layer.msg("Please select the dishes to be deleted in bulk");
+                    } else {
+                        var userIds = [];
+                        $(data).each(function (index, item) {
+                            userIds.push(item.id);
+                        });
+                        tipDialog(userIds, "SELECTED");
+                    }
+                    break;
+                case 'addNewUser':
+                    $(".title").html("Dish entry");
+                    $(".user_table_div").hide();
+                    $("#leftTree").hide();
+                    $(".operation_user").show();
+
+
+                    $(".operation_user input[name=id]").val("");
+                    $(".operation_user input[name=name]").val("");
+                    $(".operation_user input[name=code]").val("");
+                    $(".operation_user input[name=price]").val("");
+                    $(".operation_user input[name=url]").val("");
+                    $(".operation_user textarea[name=description]").val("");
+
+                    // form.val('info', {
+                    //     "status": true //开关状态
+                    // });
+                    // $(".operation_user input[name=status]").val(1);
+                    form.render(); //更新全部
+
+                    break;
+            }
+            ;
+        });
+        table.on('tool(user_table)', function (obj) {
+            var data = obj.data;
+            switch (obj.event) {
+                case 'del':
+                    var userIds = [];
+                    userIds.push(data.id);
+                    tipDialog(userIds, data.username);
+                    break;
+                case 'edit':
+                    $(".user_table_div").hide();
+                    $("#leftTree").hide();
+                    $(".operation_user").show();
+                    $(".title").html("EDIT the DISHES");
+
+                    $('#ID-upload-demo-img').attr('src', `/imgs/${data.url}`);
+                    $(".operation_user input[name=id]").val(data.id);
+                    $(".operation_user input[name=name]").val(data.name);
+                    $(".operation_user input[name=code]").val(data.code);
+                    $(".operation_user input[name=price]").val(data.price);
+                    $(".operation_user input[name=url]").val(data.url);
+                    $(".operation_user textarea[name=description]").val(data.description);
+
+                    
+                    // if (data.status == 1) {
+                    //     form.val('info', {
+                    //         "status": true //开关状态
+                    //     });
+                    //     $(".operation_user input[name=status]").val(1);
+                    // } else {
+                    //     form.val('info', {
+                    //         "status": false //开关状态
+                    //     });
+                    //     $(".operation_user input[name=status]").val(0);
+                    // }
+                    form.render(); //更新全部
+
+                    break;
+            }
+        });
+        $("#btn_cancel").click(function () {
+            $(".user_table_div").show();
+            $("#leftTree").show();
+            $(".operation_user").hide();
+            return false;
+        });
+
+        var tipDialog = function (userIds, username) {
+            layer.open({
+                content: 'Are you sure you want to delete ' + username + "Dishes?",
+
+                yes: function (index, layero) {
+                    layer.close(index); //如果设定了yes回调，需进行手工关闭
+                    CoreUtil.sendDelete(ctx + "sys/user", userIds, function (res) {
+                        layer.msg(res.msg);
+                        search()
+                    });
+                }
+            });
+        };
+        form.on('switch(switch)', function () {
+            $(".operation_user input[name=status]").attr('type', 'hidden').val(this.checked ? 1 : 2);
+        });
+
+        // 表单提交
+        form.on('submit(submit)', function (data) {
+            console.log(data.field)
+            let { id, code, name, description, price, url } = data.field
+
+            if (isEmpty(name)) {
+                layer.msg('The dish name cannot be empty', { icon: 2, time: 1000 });
+                return false;
+            }
+
+            // if (isEmpty(description)) {
+            //     layer.msg('菜品描述不能为空', { icon: 2, time: 1000 });
+            //     return false;
+            // }
+
+            if (isEmpty(price)) {
+                layer.msg('菜品价格不能为空', { icon: 2, time: 1000 });
+                return false;
+            }
+
+            if (isEmpty(url)) {
+                layer.msg('菜品图片不能为空', { icon: 2, time: 1000 });
+                return false;
+            }
+
+            if (isEmpty(id)) {
+                CoreUtil.sendPost(ctx + "sys/dishes/add", data.field, function (res) {
+                    $(".user_table_div").show();
+                    $("#leftTree").show();
+                    $(".operation_user").hide();
+
+                    search()
+                })
+            } else {
+                CoreUtil.sendPut(ctx + "sys/dishes/edit", data.field, function (res) {
+                    $(".user_table_div").show();
+                    $("#leftTree").show();
+                    $(".operation_user").hide();
+
+                    search()
+                });
+            }
+
+            return false;
+        });
+        var loadDeptTree = function (data) {
+            tree.render({
+                elem: '#deptTree'
+                , data: data
+                , onlyIconControl: true  //是否仅允许节点左侧图标控制展开收缩
+                , click: function (obj) {
+                    selectNode = obj;
+                    layer.msg(JSON.stringify(selectNode.data.title));
+                }
+            })
+        };
+
+        var loadLeftTree = function (data) {
+            tree.render({
+                elem: '#leftTree'
+                , data: data
+                , onlyIconControl: true  //是否仅允许节点左侧图标控制展开收缩
+                , click: function (obj) {
+                    console.log(obj)
+                    deptNo = obj.data.deptNo;
+                    $("#leftTree span").removeClass('custom-tree-item-clicked');     //清除旧的样式
+                    $("#leftTree span:contains(" + obj.data.title + ")").addClass('custom-tree-item-clicked');
+                    search()
+
+                }
+            })
+        }
+
+        $(".operation_user input[name=deptName]").click(function () {
+            layer.open({
+                type: 1,
+                skin: 'layui-layer-molv',
+                title: "选择部门",
+                area: ['400px', '450px'],
+                shade: 0,
+                shadeClose: false,
+                content: jQuery("#deptTree"),
+                btn: ['Confirm', 'Cancel'],
+                yes: function (index) {
+                    if (selectNode.data != null) {
+                        //选中回显
+                        $(".operation_user input[name=deptId]").val(selectNode.data.id);
+                        $(".operation_user input[name=deptName]").val(selectNode.data.title);
+                    }
+
+                    layer.close(index);
+                }
+            });
+        });
+
+        function initLeftTree() {
+            CoreUtil.sendGet(ctx + "sys/dept/tree", null, function (res) {
+                loadLeftTree(res.data);
+                loadDeptTree(res.data);
+            });
+        }
+        var initTransfer = function (data) {
+            transfer.render({
+                elem: '#roles'
+                , data: data.allRole
+                , title: ['赋予角色', '拥有角色']
+                , showSearch: true
+                , value: data.ownRoles
+                , id: 'ownData'
+                , parseData: function (res) {
+                    return {
+                        "value": res.id //数据值
+                        , "title": res.name //数据标题
+                    }
+                }
+            })
+        }
+    });
+
+    // 执行查询
+    function search() {
+        // 这里以搜索为例
+        tableIns1.reload({
+            where: { //设定异步数据接口的额外参数，任意设
+                name: $("#name").val(),
+                code:  $("#code").val(),
+            }
+            , page: {
+                curr: 1 //重新从第 1 页开始
+            }
+        });
+    };
+</script>
+
+</html>

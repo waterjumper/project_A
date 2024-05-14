@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.company.project.mapper.cooke.CartMapper">
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, table_name, menu_name, pid, gen_time
+    </sql>
+
+
+    <insert id="insertOrUpdateAuantity" useGeneratedKeys="true" keyProperty="id" parameterType="com.company.project.entity.cooke.Cart">
+        INSERT INTO `cart` (`user_id`, `product_code`, `quantity`, `unit_price`, `config`, `remark`, `ctime`, `utime`)
+        VALUES (#{item.userId}, #{item.productCode}, #{item.quantity}, #{item.unitPrice}, #{item.config}, #{item.remark}, #{item.ctime}, #{item.utime})
+        ON DUPLICATE KEY UPDATE
+        quantity = quantity + 1, utime=#{item.utime}, remark=#{item.remark}, config=#{item.config}
+    </insert>
+</mapper>
