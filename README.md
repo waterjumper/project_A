@@ -1,4 +1,4 @@
-![image](https://github.com/waterjumper/project_A/assets/145550992/8cd35e4e-73e5-4cc4-a369-d2a6866284e4)# project_A
+# project_A
 PBI List:
 
 
