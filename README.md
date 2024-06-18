@@ -18,7 +18,7 @@
 7. Access the Application
     + If all steps are completed successfully, a URL will be provided.
     + Visit the provided URL to interact with the application.
-8. Enjor our ordering system
+8. Enjor our ordering system!
 
 
 # PBI List:
