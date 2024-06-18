@@ -6,13 +6,20 @@
 
 # How to run our project
 1. Clone this repository
+    + Use git clone to clone this repository to your local machine.
 2. Active Redis
-3. Create a new schema called 'cooke' on your local database (Mysql, Oracle...)
-4. Complete the configuration in 'application-dev' file in project file (database username&password)
-5. Copy the 'cooke.sql' in 'doc' file in project file and run the sricpt on your new schema ('cooke')
-6. Run the file on your local IDE
-7. The url will be provided if the above are done successfully
-8. Go to the url you can play with the project
+3. Create a new schema
+    + Create a new schema named cooke in your local database (MySQL, Oracle, etc.).
+4. Configure the Application
+    + Edit the application-dev file located in the project directory to include your database username and password.
+5. Execute SQL Script
+    + Copy the cooke.sql file from the doc directory in the project folder and run the script on your newly created cooke schema.
+6. Run the Project
+7. Access the Application
+    + If all steps are completed successfully, a URL will be provided.
+    + Visit the provided URL to interact with the application.
+8. Enjor our ordering system
+
 
 # PBI List:
 ## Lu Yixuan: 
